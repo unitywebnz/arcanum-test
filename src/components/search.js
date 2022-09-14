@@ -1,48 +1,65 @@
-import React, {useState} from 'react';
+import React, { useState } from "react";
 
 const SearchComponent = () => {
+  const [searchSubmit, setSearchSubmit] = useState(false);
+  const [searchResults, setsearchResults] = useState([]);
 
-    const [searchSubmit, setSearchSubmit] = useState(false);
+  // Use this variable for the API request and assign the "string" to the input's value
+  const searchData = {
+    query: "string",
+  };
+  const searchField = searchData.query;
 
-    // Use this variable for the API request and assign the "string" to the input's value
-    const searchData = {
-        "query": "string"
-    }
+  const handleSubmit = async () => {
+    setSearchSubmit(true);
 
-    const handleSubmit = () => {
-        setSearchSubmit(true);
+    // fetch our data
+    await fetch(
+      `http://nlp-document-store-dev-130100662.ap-southeast-2.elb.amazonaws.com/api/nlp-document-store/query`,
+      {
+        method: "post",
+        body: JSON.stringify(searchData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    ).then((response) => {
+      response.json().then((data) => {
+        setsearchResults(data.results);
+        // console.log("data results: ", data.results);
+      });
+    });
+  };
 
-        // Use Fetch to handle http://nlp-document-store-dev-130100662.ap-southeast-2.elb.amazonaws.com/api/nlp-document-store/query
-        fetch()
-    }
+  if (searchSubmit) {
+    // Map the API response here ("results": [])
+    return (
+      <>
+        <h2>Search Result</h2>
+        <ul>
+          {searchResults.map((result, key) => (
+            <li key={key}>
+              <h4>{result.document}</h4>
+              <p>{result.documentText}</p>
+              <a href={`${result.documentUri}`} target="_blank">
+                Download Document
+              </a>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  }
 
-    if (searchSubmit) {
-
-        // Map the API response here ("results": [])
-        return(
-            <>
-                <h2>Search Result</h2>
-                <ul>
-                    <li>
-                        <h4>Document name</h4>
-                        <p>Document Text</p>
-                        <a href="" target="_blank">Download Document</a>
-                    </li>
-                </ul>
-            </>
-        )
-    }
-
-    return(
-        <>
-            <h2>Search Document</h2>
-            <form onSubmit={handleSubmit}>
-                <input type="text" value={searchField} />
-                <button type="submit">Search</button>
-            </form>
-        </>
-    )
-
-}
+  return (
+    <>
+      <h2>Search Document</h2>
+      <form onSubmit={handleSubmit}>
+        <input type="text" defaultValue={searchField} />
+        <button type="submit">Search</button>
+      </form>
+    </>
+  );
+};
 
 export default SearchComponent;
